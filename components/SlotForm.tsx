@@ -94,14 +94,14 @@ export function SlotForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create Rehearsal Slots</CardTitle>
+        <CardTitle>Crear Horarios de Ensayo</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Dates Section with Multi-Date Picker */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Dates
+              Selecciona Fechas
             </label>
             <MultiDatePicker
               selectedDates={selectedDates}
@@ -112,7 +112,7 @@ export function SlotForm() {
           {/* Times Section */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Start Times ({times.length})
+              Horarios de Inicio ({times.length})
             </label>
             <div className="space-y-2">
               {times.map((time, index) => (
@@ -150,7 +150,7 @@ export function SlotForm() {
           {/* Duration */}
           <Input
             type="number"
-            label="Duration (minutes)"
+            label="Duración (minutos)"
             value={duration}
             onChange={(e) => setDuration(e.target.value)}
             min="15"
@@ -162,7 +162,7 @@ export function SlotForm() {
           {previewSlots.length > 0 && (
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="text-sm font-medium text-gray-700 mb-2">
-                Will create {previewSlots.length} slot{previewSlots.length !== 1 ? 's' : ''}:
+                Se crearán {previewSlots.length} horario{previewSlots.length !== 1 ? 's' : ''}:
               </h4>
               <ul className="text-sm text-gray-600 space-y-1 max-h-40 overflow-y-auto">
                 {previewSlots.map((slot, index) => (
@@ -183,7 +183,7 @@ export function SlotForm() {
 
           {success && (
             <div className="text-sm text-green-600 bg-green-50 p-3 rounded-lg">
-              ✅ Slots created successfully!
+              ✅ ¡Horarios creados exitosamente!
             </div>
           )}
 
@@ -192,7 +192,7 @@ export function SlotForm() {
             disabled={loading || previewSlots.length === 0}
             className="w-full"
           >
-            {loading ? 'Creating...' : `Create ${previewSlots.length} Slot${previewSlots.length !== 1 ? 's' : ''}`}
+            {loading ? 'Creando...' : `Crear ${previewSlots.length} Horario${previewSlots.length !== 1 ? 's' : ''}`}
           </Button>
         </form>
       </CardContent>

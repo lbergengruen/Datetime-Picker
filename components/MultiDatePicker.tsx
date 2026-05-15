@@ -14,8 +14,8 @@ export function MultiDatePicker({ selectedDates, onChange }: MultiDatePickerProp
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
   const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ];
 
   const calendar = useMemo(() => {
@@ -88,7 +88,7 @@ export function MultiDatePicker({ selectedDates, onChange }: MultiDatePickerProp
     }
   };
 
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
@@ -98,7 +98,7 @@ export function MultiDatePicker({ selectedDates, onChange }: MultiDatePickerProp
           type="button"
           onClick={goToPrevMonth}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          aria-label="Previous month"
+          aria-label="Mes anterior"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -111,7 +111,7 @@ export function MultiDatePicker({ selectedDates, onChange }: MultiDatePickerProp
           type="button"
           onClick={goToNextMonth}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          aria-label="Next month"
+          aria-label="Mes siguiente"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -159,7 +159,7 @@ export function MultiDatePicker({ selectedDates, onChange }: MultiDatePickerProp
       {selectedDates.length > 0 && (
         <div className="mt-4 pt-4 border-t border-gray-200">
           <p className="text-sm text-gray-600 mb-2">
-            {selectedDates.length} date{selectedDates.length !== 1 ? 's' : ''} selected:
+            {selectedDates.length} fecha{selectedDates.length !== 1 ? 's' : ''} seleccionada{selectedDates.length !== 1 ? 's' : ''}:
           </p>
           <div className="flex flex-wrap gap-2">
             {selectedDates.map(dateString => (
@@ -169,7 +169,7 @@ export function MultiDatePicker({ selectedDates, onChange }: MultiDatePickerProp
                 onClick={() => toggleDate(dateString)}
                 className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-md hover:bg-blue-200 transition-colors"
               >
-                {new Date(dateString).toLocaleDateString('en-US', { 
+                {new Date(dateString).toLocaleDateString('es-ES', { 
                   month: 'short', 
                   day: 'numeric' 
                 })}
@@ -182,7 +182,7 @@ export function MultiDatePicker({ selectedDates, onChange }: MultiDatePickerProp
             onClick={() => onChange([])}
             className="mt-2 text-xs text-gray-500 hover:text-gray-700 underline"
           >
-            Clear all
+            Limpiar todo
           </button>
         </div>
       )}

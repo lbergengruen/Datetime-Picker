@@ -12,10 +12,10 @@ export default async function ConfigPage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Configure Rehearsal Slots
+            Configurar Horarios de Ensayo
           </h1>
           <p className="text-gray-600">
-            Add and manage available rehearsal times
+            Agrega y gestiona los horarios disponibles para ensayar
           </p>
         </div>
 

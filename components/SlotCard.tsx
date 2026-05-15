@@ -74,7 +74,7 @@ export function SlotCard({ slot, onDelete, selectable, selected, onSelect }: Slo
             onClick={() => onDelete(slot.id)}
             className="px-3 py-1.5 min-h-0 h-auto"
           >
-            Delete
+            Eliminar
           </Button>
         )}
       </div>

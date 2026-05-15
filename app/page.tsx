@@ -1,5 +1,5 @@
 import { getRehearsalSlots } from '@/lib/actions';
-import { SubmissionForm } from '@/components/SubmissionForm';
+import { CalendarSubmissionForm } from '@/components/CalendarSubmissionForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,16 +8,16 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Rehearsal Availability
+            Disponibilidad para Ensayos
           </h1>
           <p className="text-gray-600">
-            Select all the rehearsal slots you can attend
+            Selecciona los horarios en los que puedes asistir al ensayo
           </p>
         </div>
-        <SubmissionForm slots={slots} />
+        <CalendarSubmissionForm slots={slots} />
       </div>
     </main>
   );

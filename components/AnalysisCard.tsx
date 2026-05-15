@@ -41,11 +41,11 @@ export function AnalysisCard({ analysisSlot, rank }: AnalysisCardProps) {
           </div>
           <div className="flex flex-col items-end gap-2">
             <Badge variant={isTopSlot ? 'success' : 'default'}>
-              {attendeeCount} {attendeeCount === 1 ? 'person' : 'people'}
+              {attendeeCount} {attendeeCount === 1 ? 'persona' : 'personas'}
             </Badge>
             {attendanceRate > 0 && (
               <span className="text-xs text-gray-500">
-                {attendanceRate}% attendance
+                {attendanceRate}% asistencia
               </span>
             )}
           </div>
@@ -57,7 +57,7 @@ export function AnalysisCard({ analysisSlot, rank }: AnalysisCardProps) {
               onClick={() => setExpanded(!expanded)}
               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
-              {expanded ? 'Hide' : 'Show'} attendees
+              {expanded ? 'Ocultar' : 'Ver'} asistentes
             </button>
             {expanded && (
               <div className="mt-2 text-sm text-gray-700">
@@ -69,7 +69,7 @@ export function AnalysisCard({ analysisSlot, rank }: AnalysisCardProps) {
 
         {attendeeCount === 0 && (
           <div className="text-sm text-gray-500 italic">
-            No one available for this slot
+            Nadie disponible para este horario
           </div>
         )}
       </div>

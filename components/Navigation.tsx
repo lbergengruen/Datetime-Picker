@@ -8,7 +8,7 @@ export function Navigation() {
           <div className="flex">
             <Link href="/" className="flex items-center">
               <span className="text-xl font-bold text-gray-900">
-                Rehearsal Scheduler
+                Organizador de Ensayos
               </span>
             </Link>
           </div>
@@ -17,19 +17,19 @@ export function Navigation() {
               href="/"
               className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
             >
-              Submit
+              Disponibilidad
             </Link>
             <Link
               href="/analysis"
               className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
             >
-              Analysis
+              Análisis
             </Link>
             <Link
               href="/config"
               className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
             >
-              Config
+              Configurar
             </Link>
           </div>
         </div>

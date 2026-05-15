@@ -14,19 +14,19 @@ export default async function AnalysisPage() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Rehearsal Analysis
+            Análisis de Ensayos
           </h1>
           <div className="flex items-center gap-2">
             <p className="text-gray-600">
-              Best rehearsal options based on availability
+              Mejores opciones de ensayo según la disponibilidad
             </p>
-            <Badge>{totalSubmissions} {totalSubmissions === 1 ? 'response' : 'responses'}</Badge>
+            <Badge>{totalSubmissions} {totalSubmissions === 1 ? 'respuesta' : 'respuestas'}</Badge>
           </div>
         </div>
 
         {slots.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">No rehearsal slots available yet.</p>
+            <p className="text-gray-600">Aún no hay horarios de ensayo disponibles.</p>
           </div>
         ) : (
           <div className="space-y-4">
