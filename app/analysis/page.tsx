@@ -1,13 +1,29 @@
+import { unstable_noStore } from 'next/cache';
 import { getAnalysisData } from '@/lib/actions';
 import { AnalysisCard } from '@/components/AnalysisCard';
 import { Badge } from '@/components/ui/Badge';
+import type { AnalysisSlot } from '@/lib/types';
 
 // Force dynamic rendering to avoid static generation issues during build
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+export const runtime = 'nodejs';
 
 export default async function AnalysisPage() {
-  const { slots, totalSubmissions } = await getAnalysisData();
+  // Prevent static caching
+  unstable_noStore();
+  
+  let slots: AnalysisSlot[] = [];
+  let totalSubmissions = 0;
+  
+  try {
+    const data = await getAnalysisData();
+    slots = data.slots;
+    totalSubmissions = data.totalSubmissions;
+  } catch (error) {
+    console.error('Error loading analysis data:', error);
+    // Return empty state if database is not available
+  }
 
   return (
     <main className="min-h-screen p-4 md:p-8">
