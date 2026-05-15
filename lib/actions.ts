@@ -178,6 +178,54 @@ export async function deleteAllSubmissions(): Promise<ActionResult<number>> {
   }
 }
 
+export async function deleteSubmission(id: string): Promise<ActionResult<void>> {
+  try {
+    // Check if database is available (for build-time)
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === 'postgresql://placeholder') {
+      return { success: true, data: undefined };
+    }
+    
+    await prisma.availabilitySubmission.delete({
+      where: { id },
+    });
+
+    revalidatePath('/analysis');
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error('Error deleting submission:', error);
+    return { success: false, error: 'Failed to delete submission' };
+  }
+}
+
+export async function getSubmissionsList(): Promise<Array<{ id: string; participantName: string; createdAt: Date; selectionCount: number }>> {
+  try {
+    // Check if database is available (for build-time)
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === 'postgresql://placeholder') {
+      return [];
+    }
+    
+    const submissions = await prisma.availabilitySubmission.findMany({
+      include: {
+        _count: {
+          select: { selections: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    
+    return submissions.map(sub => ({
+      id: sub.id,
+      participantName: sub.participantName,
+      createdAt: sub.createdAt,
+      selectionCount: sub._count.selections,
+    }));
+  } catch (error) {
+    console.error('Error fetching submissions:', error);
+    return [];
+  }
+}
+
 export async function submitAvailability(data: {
   participantName: string;
   slotIds: string[];

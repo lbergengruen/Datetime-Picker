@@ -1,8 +1,9 @@
 import { unstable_noStore } from 'next/cache';
-import { getAnalysisData } from '@/lib/actions';
+import { getAnalysisData, getSubmissionsList } from '@/lib/actions';
 import { AttendanceChart } from '@/components/AttendanceChart';
 import { StatsSummary } from '@/components/StatsSummary';
 import { DetailedSlotList } from '@/components/DetailedSlotList';
+import { SubmissionsManager } from '@/components/SubmissionsManager';
 import type { AnalysisSlot } from '@/lib/types';
 
 // Force dynamic rendering to avoid static generation issues during build
@@ -16,11 +17,13 @@ export default async function AnalysisPage() {
   
   let slots: AnalysisSlot[] = [];
   let totalSubmissions = 0;
+  let submissions: Awaited<ReturnType<typeof getSubmissionsList>> = [];
   
   try {
     const data = await getAnalysisData();
     slots = data.slots;
     totalSubmissions = data.totalSubmissions;
+    submissions = await getSubmissionsList();
   } catch (error) {
     console.error('Error loading analysis data:', error);
     // Return empty state if database is not available
@@ -59,18 +62,18 @@ export default async function AnalysisPage() {
               averageAttendance={averageAttendance}
             />
 
-            {/* Two Column Layout: Chart + List */}
-            <div className="grid lg:grid-cols-2 gap-8">
+            {/* Three Column Layout on large screens */}
+            <div className="grid lg:grid-cols-3 gap-8">
               {/* Left: Chart */}
-              <div>
+              <div className="lg:col-span-1">
                 <AttendanceChart 
                   slots={slots} 
                   totalSubmissions={totalSubmissions} 
                 />
               </div>
 
-              {/* Right: Detailed List */}
-              <div>
+              {/* Middle: Detailed List */}
+              <div className="lg:col-span-1">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Ranking de Horarios
                 </h3>
@@ -78,6 +81,11 @@ export default async function AnalysisPage() {
                   slots={slots} 
                   totalSubmissions={totalSubmissions} 
                 />
+              </div>
+
+              {/* Right: Submissions Manager */}
+              <div className="lg:col-span-1">
+                <SubmissionsManager submissions={submissions} />
               </div>
             </div>
           </div>
