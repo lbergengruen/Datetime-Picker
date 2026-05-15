@@ -1,11 +1,22 @@
+import { unstable_noStore } from 'next/cache';
 import { getRehearsalSlots } from '@/lib/actions';
 import { SlotForm } from '@/components/SlotForm';
 import { SlotList } from '@/components/SlotList';
+import type { RehearsalSlot } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export default async function ConfigPage() {
-  const slots = await getRehearsalSlots();
+  unstable_noStore();
+  
+  let slots: RehearsalSlot[] = [];
+  
+  try {
+    slots = await getRehearsalSlots();
+  } catch (error) {
+    console.error('Error loading slots:', error);
+  }
 
   return (
     <main className="min-h-screen p-4 md:p-8">
