@@ -1,0 +1,37 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model RehearsalSlot {
+  id              String   @id @default(cuid())
+  date            DateTime
+  startTime       String
+  durationMinutes Int
+  createdAt       DateTime @default(now())
+
+  selections AvailabilitySelection[]
+}
+
+model AvailabilitySubmission {
+  id              String   @id @default(cuid())
+  participantName String
+  createdAt       DateTime @default(now())
+
+  selections AvailabilitySelection[]
+}
+
+model AvailabilitySelection {
+  id           String @id @default(cuid())
+  submissionId String
+  slotId       String
+
+  submission AvailabilitySubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  slot       RehearsalSlot          @relation(fields: [slotId], references: [id], onDelete: Cascade)
+
+  @@unique([submissionId, slotId])
+}
