@@ -138,6 +138,11 @@ export async function getRehearsalSlots(): Promise<RehearsalSlot[]> {
 
 export async function deleteAllRehearsalSlots(): Promise<ActionResult<void>> {
   try {
+    // Check if database is available (for build-time)
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === 'postgresql://placeholder') {
+      return { success: true, data: undefined };
+    }
+    
     await prisma.rehearsalSlot.deleteMany({});
 
     revalidatePath('/config');
@@ -148,6 +153,28 @@ export async function deleteAllRehearsalSlots(): Promise<ActionResult<void>> {
   } catch (error) {
     console.error('Error deleting all rehearsal slots:', error);
     return { success: false, error: 'Failed to delete all rehearsal slots' };
+  }
+}
+
+export async function deleteAllSubmissions(): Promise<ActionResult<number>> {
+  try {
+    // Check if database is available (for build-time)
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === 'postgresql://placeholder') {
+      return { success: true, data: 0 };
+    }
+    
+    // Delete all selections first (cascade will handle this, but being explicit)
+    await prisma.availabilitySelection.deleteMany({});
+    
+    // Delete all submissions
+    const result = await prisma.availabilitySubmission.deleteMany({});
+
+    revalidatePath('/analysis');
+
+    return { success: true, data: result.count };
+  } catch (error) {
+    console.error('Error deleting all submissions:', error);
+    return { success: false, error: 'Failed to delete all submissions' };
   }
 }
 

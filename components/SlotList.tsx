@@ -5,7 +5,7 @@ import { RehearsalSlot } from '@prisma/client';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/Card';
 import { Button } from './ui/Button';
 import { SlotCard } from './SlotCard';
-import { deleteRehearsalSlot, deleteAllRehearsalSlots } from '@/lib/actions';
+import { deleteRehearsalSlot, deleteAllRehearsalSlots, deleteAllSubmissions } from '@/lib/actions';
 
 interface SlotListProps {
   slots: RehearsalSlot[];
@@ -13,6 +13,7 @@ interface SlotListProps {
 
 export function SlotList({ slots }: SlotListProps) {
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [clearingSubmissions, setClearingSubmissions] = useState(false);
 
   const handleDelete = async (id: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar este horario?')) {
@@ -40,21 +41,44 @@ export function SlotList({ slots }: SlotListProps) {
     }
   };
 
+  const handleClearSubmissions = async () => {
+    if (!confirm('¿Estás seguro de que quieres borrar TODAS las respuestas de disponibilidad? Los horarios de ensayo se mantendrán. Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    setClearingSubmissions(true);
+    try {
+      await deleteAllSubmissions();
+    } finally {
+      setClearingSubmissions(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Horarios de Ensayo ({slots.length})</CardTitle>
-          {slots.length > 0 && (
+          <div className="flex gap-2">
             <Button
-              variant="danger"
-              onClick={handleDeleteAll}
-              disabled={deleting === 'all'}
+              variant="secondary"
+              onClick={handleClearSubmissions}
+              disabled={clearingSubmissions}
               className="px-3 py-1.5 min-h-0 h-auto text-xs"
             >
-              {deleting === 'all' ? 'Eliminando...' : 'Eliminar Todos'}
+              {clearingSubmissions ? 'Limpiando...' : 'Limpiar Respuestas'}
             </Button>
-          )}
+            {slots.length > 0 && (
+              <Button
+                variant="danger"
+                onClick={handleDeleteAll}
+                disabled={deleting === 'all'}
+                className="px-3 py-1.5 min-h-0 h-auto text-xs"
+              >
+                {deleting === 'all' ? 'Eliminando...' : 'Eliminar Todos'}
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
