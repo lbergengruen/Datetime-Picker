@@ -1,7 +1,8 @@
 import { unstable_noStore } from 'next/cache';
 import { getAnalysisData } from '@/lib/actions';
-import { AnalysisCard } from '@/components/AnalysisCard';
-import { Badge } from '@/components/ui/Badge';
+import { AttendanceChart } from '@/components/AttendanceChart';
+import { StatsSummary } from '@/components/StatsSummary';
+import { DetailedSlotList } from '@/components/DetailedSlotList';
 import type { AnalysisSlot } from '@/lib/types';
 
 // Force dynamic rendering to avoid static generation issues during build
@@ -25,34 +26,60 @@ export default async function AnalysisPage() {
     // Return empty state if database is not available
   }
 
+  // Calculate stats
+  const bestAttendance = slots.length > 0 ? Math.max(...slots.map(s => s.attendeeCount)) : 0;
+  const averageAttendance = slots.length > 0 
+    ? slots.reduce((acc, s) => acc + s.attendeeCount, 0) / slots.length 
+    : 0;
+
   return (
     <main className="min-h-screen p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Análisis de Ensayos
           </h1>
-          <div className="flex items-center gap-2">
-            <p className="text-gray-600">
-              Mejores opciones de ensayo según la disponibilidad
-            </p>
-            <Badge>{totalSubmissions} {totalSubmissions === 1 ? 'respuesta' : 'respuestas'}</Badge>
-          </div>
+          <p className="text-gray-600">
+            Visualización de la disponibilidad del coro para los horarios propuestos
+          </p>
         </div>
 
         {slots.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
             <p className="text-gray-600">Aún no hay horarios de ensayo disponibles.</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {slots.map((analysisSlot, index) => (
-              <AnalysisCard
-                key={analysisSlot.slot.id}
-                analysisSlot={analysisSlot}
-                rank={index + 1}
-              />
-            ))}
+          <div className="space-y-8">
+            {/* Stats Summary */}
+            <StatsSummary 
+              totalSubmissions={totalSubmissions}
+              totalSlots={slots.length}
+              bestAttendance={bestAttendance}
+              averageAttendance={averageAttendance}
+            />
+
+            {/* Two Column Layout: Chart + List */}
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Left: Chart */}
+              <div>
+                <AttendanceChart 
+                  slots={slots} 
+                  totalSubmissions={totalSubmissions} 
+                />
+              </div>
+
+              {/* Right: Detailed List */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Ranking de Horarios
+                </h3>
+                <DetailedSlotList 
+                  slots={slots} 
+                  totalSubmissions={totalSubmissions} 
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>

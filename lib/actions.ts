@@ -118,6 +118,11 @@ export async function deleteRehearsalSlot(id: string): Promise<ActionResult<void
 
 export async function getRehearsalSlots(): Promise<RehearsalSlot[]> {
   try {
+    // Check if database is available (for build-time)
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === 'postgresql://placeholder') {
+      return [];
+    }
+    
     const slots = await prisma.rehearsalSlot.findMany({
       orderBy: [
         { date: 'asc' },
@@ -190,6 +195,14 @@ export async function submitAvailability(data: {
 
 export async function getAnalysisData(): Promise<AnalysisData> {
   try {
+    // Check if database is available (for build-time)
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === 'postgresql://placeholder') {
+      return {
+        slots: [],
+        totalSubmissions: 0,
+      };
+    }
+    
     const [slots, totalSubmissions] = await Promise.all([
       prisma.rehearsalSlot.findMany({
         include: {
