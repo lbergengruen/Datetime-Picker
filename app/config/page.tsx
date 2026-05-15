@@ -2,6 +2,8 @@ import { getRehearsalSlots } from '@/lib/actions';
 import { SlotForm } from '@/components/SlotForm';
 import { SlotList } from '@/components/SlotList';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ConfigPage() {
   const slots = await getRehearsalSlots();
 

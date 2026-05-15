@@ -2,6 +2,10 @@ import { getAnalysisData } from '@/lib/actions';
 import { AnalysisCard } from '@/components/AnalysisCard';
 import { Badge } from '@/components/ui/Badge';
 
+// Force dynamic rendering to avoid static generation issues during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AnalysisPage() {
   const { slots, totalSubmissions } = await getAnalysisData();
 

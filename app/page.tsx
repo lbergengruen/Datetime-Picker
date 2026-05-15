@@ -1,6 +1,8 @@
 import { getRehearsalSlots } from '@/lib/actions';
 import { SubmissionForm } from '@/components/SubmissionForm';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const slots = await getRehearsalSlots();
 
