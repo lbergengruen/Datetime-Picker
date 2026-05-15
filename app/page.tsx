@@ -8,7 +8,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen p-4 md:p-8">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Disponibilidad para Ensayos
