@@ -6,7 +6,7 @@ import { Input } from './ui/Input';
 import { Button } from './ui/Button';
 import { MultiDatePicker } from './MultiDatePicker';
 import { createRehearsalSlots } from '@/lib/actions';
-import { formatDateInput, formatDate, formatTime, calculateEndTime } from '@/lib/utils';
+import { formatDateInput, formatDate, formatTime, calculateEndTime, parseDateString } from '@/lib/utils';
 
 interface TimeEntry {
   id: string;
@@ -60,7 +60,7 @@ export function SlotForm() {
     setLoading(true);
 
     try {
-      const validDates = selectedDates.map(d => new Date(d));
+      const validDates = selectedDates.map(d => parseDateString(d));
       const validTimes = times.filter(t => t.value).map(t => t.value);
 
       if (validDates.length === 0 || validTimes.length === 0) {

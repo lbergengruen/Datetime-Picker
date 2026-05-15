@@ -14,11 +14,19 @@ export function calculateEndTime(startTime: string, durationMinutes: number): st
 }
 
 export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat('es-ES', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   }).format(date);
+}
+
+// Parse date string (YYYY-MM-DD) and return a Date object at noon UTC
+// This avoids timezone issues where midnight UTC becomes previous day in negative timezones
+export function parseDateString(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  // Create date at noon UTC to avoid day boundary issues
+  return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
 }
 
 export function formatTime(time: string): string {
@@ -30,6 +38,21 @@ export function formatTime(time: string): string {
 
 export function formatDateRange(date: Date, startTime: string, endTime: string): string {
   return `${formatDate(date)} — ${formatTime(startTime)}–${formatTime(endTime)}`;
+}
+
+// Format date for display in calendar cards (e.g., "16 de Junio")
+export function formatDateCard(date: Date): string {
+  return new Intl.DateTimeFormat('es-ES', {
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+}
+
+// Get day name in Spanish (e.g., "Lunes")
+export function getDayName(date: Date): string {
+  return new Intl.DateTimeFormat('es-ES', {
+    weekday: 'long',
+  }).format(date);
 }
 
 export function formatDateInput(date: Date): string {

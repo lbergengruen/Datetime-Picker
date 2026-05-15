@@ -65,11 +65,19 @@ export async function createRehearsalSlots(data: {
     }
 
     // Create all combinations of dates and times
+    // Normalize dates to noon UTC to avoid timezone boundary issues
     const slotsToCreate = [];
     for (const date of data.dates) {
+      // Ensure date is at noon UTC to avoid day boundary issues
+      const normalizedDate = new Date(Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        12, 0, 0
+      ));
       for (const startTime of data.startTimes) {
         slotsToCreate.push({
-          date,
+          date: normalizedDate,
           startTime,
           durationMinutes: data.durationMinutes,
         });

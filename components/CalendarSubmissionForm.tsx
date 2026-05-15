@@ -11,6 +11,16 @@ interface CalendarSubmissionFormProps {
   slots: RehearsalSlot[];
 }
 
+// Helper to get date parts from a Date that might be interpreted as UTC
+function getDateParts(date: Date): { day: number; month: number; year: number } {
+  // Use UTC methods to avoid timezone issues
+  return {
+    day: date.getUTCDate(),
+    month: date.getUTCMonth(),
+    year: date.getUTCFullYear(),
+  };
+}
+
 const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
@@ -37,15 +47,20 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
     const grupos = new Map<string, DiaAgrupado>();
 
     slots.forEach(slot => {
+      // Parse the date using UTC methods to avoid timezone issues
       const fecha = new Date(slot.date);
-      const fechaKey = formatDateInput(fecha);
+      const { day, month, year } = getDateParts(fecha);
+      const fechaKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
+      // Create a date object for getting the day of week (using noon UTC to avoid boundary issues)
+      const fechaParaDiaSemana = new Date(Date.UTC(year, month, day, 12, 0, 0));
       
       if (!grupos.has(fechaKey)) {
         grupos.set(fechaKey, {
           fecha: fechaKey,
-          diaSemana: diasSemana[fecha.getDay()],
-          diaNumero: fecha.getDate(),
-          mes: meses[fecha.getMonth()],
+          diaSemana: diasSemana[fechaParaDiaSemana.getUTCDay()],
+          diaNumero: day,
+          mes: meses[month],
           slots: [],
         });
       }
