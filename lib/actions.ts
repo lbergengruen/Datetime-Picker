@@ -43,6 +43,54 @@ export async function createRehearsalSlot(data: {
   }
 }
 
+export async function createRehearsalSlots(data: {
+  dates: Date[];
+  startTimes: string[];
+  durationMinutes: number;
+}): Promise<ActionResult<number>> {
+  try {
+    if (!data.dates || data.dates.length === 0 || !data.startTimes || data.startTimes.length === 0) {
+      return { success: false, error: 'At least one date and one time are required' };
+    }
+
+    if (data.durationMinutes < 15 || data.durationMinutes > 480) {
+      return { success: false, error: 'Duration must be between 15 and 480 minutes' };
+    }
+
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    for (const time of data.startTimes) {
+      if (!timeRegex.test(time)) {
+        return { success: false, error: 'Invalid time format. Use HH:MM' };
+      }
+    }
+
+    // Create all combinations of dates and times
+    const slotsToCreate = [];
+    for (const date of data.dates) {
+      for (const startTime of data.startTimes) {
+        slotsToCreate.push({
+          date,
+          startTime,
+          durationMinutes: data.durationMinutes,
+        });
+      }
+    }
+
+    const result = await prisma.rehearsalSlot.createMany({
+      data: slotsToCreate,
+    });
+
+    revalidatePath('/config');
+    revalidatePath('/');
+    revalidatePath('/analysis');
+
+    return { success: true, data: result.count };
+  } catch (error) {
+    console.error('Error creating rehearsal slots:', error);
+    return { success: false, error: 'Failed to create rehearsal slots' };
+  }
+}
+
 export async function deleteRehearsalSlot(id: string): Promise<ActionResult<void>> {
   try {
     await prisma.rehearsalSlot.delete({
