@@ -4,14 +4,9 @@ import { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/Card';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
+import { MultiDatePicker } from './MultiDatePicker';
 import { createRehearsalSlots } from '@/lib/actions';
 import { formatDateInput, formatDate, formatTime, calculateEndTime } from '@/lib/utils';
-import { RehearsalSlot } from '@prisma/client';
-
-interface DateEntry {
-  id: string;
-  value: string;
-}
 
 interface TimeEntry {
   id: string;
@@ -19,9 +14,7 @@ interface TimeEntry {
 }
 
 export function SlotForm() {
-  const [dates, setDates] = useState<DateEntry[]>([
-    { id: '1', value: formatDateInput(new Date()) }
-  ]);
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [times, setTimes] = useState<TimeEntry[]>([
     { id: '1', value: '19:00' }
   ]);
@@ -32,34 +25,19 @@ export function SlotForm() {
 
   const previewSlots = useMemo(() => {
     const slots: Array<{ date: string; startTime: string; endTime: string }> = [];
-    for (const date of dates) {
-      if (!date.value) continue;
+    for (const dateString of selectedDates) {
       for (const time of times) {
         if (!time.value) continue;
         const endTime = calculateEndTime(time.value, parseInt(duration, 10));
         slots.push({
-          date: formatDate(new Date(date.value)),
+          date: formatDate(new Date(dateString)),
           startTime: formatTime(time.value),
           endTime: formatTime(endTime),
         });
       }
     }
     return slots;
-  }, [dates, times, duration]);
-
-  const addDate = () => {
-    setDates([...dates, { id: Math.random().toString(36).substr(2, 9), value: '' }]);
-  };
-
-  const removeDate = (id: string) => {
-    if (dates.length > 1) {
-      setDates(dates.filter(d => d.id !== id));
-    }
-  };
-
-  const updateDate = (id: string, value: string) => {
-    setDates(dates.map(d => d.id === id ? { ...d, value } : d));
-  };
+  }, [selectedDates, times, duration]);
 
   const addTime = () => {
     setTimes([...times, { id: Math.random().toString(36).substr(2, 9), value: '' }]);
@@ -82,11 +60,11 @@ export function SlotForm() {
     setLoading(true);
 
     try {
-      const validDates = dates.filter(d => d.value).map(d => new Date(d.value));
+      const validDates = selectedDates.map(d => new Date(d));
       const validTimes = times.filter(t => t.value).map(t => t.value);
 
       if (validDates.length === 0 || validTimes.length === 0) {
-        setError('Please add at least one date and one time');
+        setError('Please select at least one date and add one time');
         setLoading(false);
         return;
       }
@@ -99,8 +77,8 @@ export function SlotForm() {
 
       if (result.success) {
         setSuccess(true);
-        // Reset to single date/time
-        setDates([{ id: '1', value: formatDateInput(new Date()) }]);
+        // Reset form
+        setSelectedDates([]);
         setTimes([{ id: '1', value: '19:00' }]);
         setDuration('120');
       } else {
@@ -120,42 +98,15 @@ export function SlotForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Dates Section */}
+          {/* Dates Section with Multi-Date Picker */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Dates ({dates.length})
+              Select Dates
             </label>
-            <div className="space-y-2">
-              {dates.map((date, index) => (
-                <div key={date.id} className="flex gap-2">
-                  <Input
-                    type="date"
-                    value={date.value}
-                    onChange={(e) => updateDate(date.id, e.target.value)}
-                    required={index === 0}
-                    className="flex-1"
-                  />
-                  {dates.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="danger"
-                      onClick={() => removeDate(date.id)}
-                      className="px-3"
-                    >
-                      ×
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={addDate}
-              className="mt-2 w-full"
-            >
-              + Add Another Date
-            </Button>
+            <MultiDatePicker
+              selectedDates={selectedDates}
+              onChange={setSelectedDates}
+            />
           </div>
 
           {/* Times Section */}
