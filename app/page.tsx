@@ -1,5 +1,5 @@
 import { unstable_noStore } from 'next/cache';
-import { getRehearsalSlots } from '@/lib/actions';
+import { getRehearsalSlots, getSubmissionsList } from '@/lib/actions';
 import { CalendarSubmissionForm } from '@/components/CalendarSubmissionForm';
 import type { RehearsalSlot } from '@prisma/client';
 
@@ -10,11 +10,15 @@ export default async function Home() {
   unstable_noStore();
   
   let slots: RehearsalSlot[] = [];
+  let submissions: Awaited<ReturnType<typeof getSubmissionsList>> = [];
   
   try {
-    slots = await getRehearsalSlots();
+    [slots, submissions] = await Promise.all([
+      getRehearsalSlots(),
+      getSubmissionsList()
+    ]);
   } catch (error) {
-    console.error('Error loading slots:', error);
+    console.error('Error loading data:', error);
   }
 
   return (
@@ -28,7 +32,7 @@ export default async function Home() {
             Selecciona los horarios en los que puedes asistir al ensayo
           </p>
         </div>
-        <CalendarSubmissionForm slots={slots} />
+        <CalendarSubmissionForm slots={slots} submissions={submissions} />
       </div>
     </main>
   );

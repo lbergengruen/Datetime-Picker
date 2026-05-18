@@ -4,11 +4,21 @@ import { useState, useMemo } from 'react';
 import { RehearsalSlot } from '@prisma/client';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
-import { submitAvailability, getSubmissionByName, updateAvailability } from '@/lib/actions';
+import { submitAvailability, updateAvailability } from '@/lib/actions';
+import { EditSubmissionModal } from './EditSubmissionModal';
 import { formatTime, calculateEndTime, formatDateInput } from '@/lib/utils';
+
+interface Submission {
+  id: string;
+  participantName: string;
+  createdAt: Date;
+  selectionCount: number;
+  selections: Array<{ slotId: string }>;
+}
 
 interface CalendarSubmissionFormProps {
   slots: RehearsalSlot[];
+  submissions: Submission[];
 }
 
 // Helper to get date parts from a Date that might be interpreted as UTC
@@ -36,7 +46,7 @@ interface DiaAgrupado {
   }>;
 }
 
-export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
+export function CalendarSubmissionForm({ slots, submissions }: CalendarSubmissionFormProps) {
   const [nombre, setNombre] = useState('');
   const [slotsSeleccionados, setSlotsSeleccionados] = useState<Set<string>>(new Set());
   const [error, setError] = useState('');
@@ -44,7 +54,7 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
   const [exito, setExito] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [submissionId, setSubmissionId] = useState<string | null>(null);
-  const [buscando, setBuscando] = useState(false);
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   const diasAgrupados = useMemo(() => {
     const grupos = new Map<string, DiaAgrupado>();
@@ -99,36 +109,27 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
     setSlotsSeleccionados(nuevos);
   };
 
-  const buscarRespuesta = async () => {
-    if (!nombre.trim()) {
-      setError('Ingresa tu nombre para buscar tu respuesta');
-      return;
-    }
-
-    setBuscando(true);
+  const abrirModalEdicion = () => {
+    setModalAbierto(true);
     setError('');
+  };
 
-    try {
-      const resultado = await getSubmissionByName(nombre);
-      
-      if (resultado.success && resultado.data) {
-        // Encontró una respuesta existente
-        setSubmissionId(resultado.data.id);
-        setModoEdicion(true);
-        // Cargar las selecciones existentes
-        const slotIds = resultado.data.selections.map(s => s.slotId);
-        setSlotsSeleccionados(new Set(slotIds));
-      } else {
-        setError('No se encontró una respuesta con ese nombre. Puedes crear una nueva.');
-        setModoEdicion(false);
-        setSubmissionId(null);
-        setSlotsSeleccionados(new Set());
-      }
-    } catch (err) {
-      setError('Error al buscar la respuesta');
-    } finally {
-      setBuscando(false);
-    }
+  const cerrarModalEdicion = () => {
+    setModalAbierto(false);
+  };
+
+  const seleccionarSubmission = (submission: Submission) => {
+    // Cargar datos de la submission seleccionada
+    setNombre(submission.participantName);
+    setSubmissionId(submission.id);
+    setModoEdicion(true);
+    
+    // Cargar las selecciones existentes
+    const slotIds = submission.selections.map(s => s.slotId);
+    setSlotsSeleccionados(new Set(slotIds));
+    
+    // Cerrar modal
+    setModalAbierto(false);
   };
 
   const enviar = async (e: React.FormEvent) => {
@@ -205,7 +206,21 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
   return (
     <div className="max-w-7xl mx-auto">
       <form onSubmit={enviar} className="space-y-8">
-        <div className="space-y-2">
+        <div className="space-y-4">
+          {/* Botón para editar respuesta existente */}
+          {submissions.length > 0 && (
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={abrirModalEdicion}
+                className="text-sm"
+              >
+                ✏️ Editar mi Respuesta
+              </Button>
+            </div>
+          )}
+
           <Input
             type="text"
             label="Tu Nombre"
@@ -225,19 +240,9 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
             maxLength={100}
           />
           
-          {/* Botón para buscar/editar respuesta existente */}
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={buscarRespuesta}
-              disabled={buscando || !nombre.trim()}
-              className="text-sm"
-            >
-              {buscando ? 'Buscando...' : modoEdicion ? '💾 Modo Edición' : '🔍 Buscar mi respuesta'}
-            </Button>
-            
-            {modoEdicion && (
+          {modoEdicion && (
+            <div className="flex items-center justify-between text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
+              <span>✏️ Editando respuesta de <strong>{nombre}</strong></span>
               <Button
                 type="button"
                 variant="danger"
@@ -245,18 +250,13 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
                   setModoEdicion(false);
                   setSubmissionId(null);
                   setSlotsSeleccionados(new Set());
+                  setNombre('');
                 }}
-                className="text-sm"
+                className="text-xs px-2 py-1 min-h-0 h-auto"
               >
-                Cancelar edición
+                Cancelar
               </Button>
-            )}
-          </div>
-          
-          {modoEdicion && (
-            <p className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
-              Estás editando tu respuesta existente. Modifica las selecciones y guarda los cambios.
-            </p>
+            </div>
           )}
         </div>
 
@@ -357,6 +357,14 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
           }
         </Button>
       </form>
+
+      {/* Modal para seleccionar submission a editar */}
+      <EditSubmissionModal
+        isOpen={modalAbierto}
+        onClose={cerrarModalEdicion}
+        submissions={submissions}
+        onSelect={seleccionarSubmission}
+      />
     </div>
   );
 }
