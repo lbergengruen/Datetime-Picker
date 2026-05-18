@@ -32,6 +32,34 @@ export function SubmissionsManager({ submissions }: SubmissionsManagerProps) {
     }
   };
 
+  const downloadCSV = () => {
+    // CSV Headers
+    const headers = ['Nombre', 'Horarios Seleccionados', 'Fecha de Respuesta'];
+    
+    // CSV Rows
+    const rows = submissions.map(sub => [
+      sub.participantName,
+      sub.selectionCount.toString(),
+      new Date(sub.createdAt).toLocaleString('es-ES')
+    ]);
+    
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `respuestas_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (submissions.length === 0) {
     return (
       <Card className="p-6">
@@ -47,9 +75,18 @@ export function SubmissionsManager({ submissions }: SubmissionsManagerProps) {
 
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        Respuestas Recibidas ({submissions.length})
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Respuestas Recibidas ({submissions.length})
+        </h3>
+        <Button
+          variant="secondary"
+          onClick={downloadCSV}
+          className="px-3 py-1.5 min-h-0 h-auto text-xs"
+        >
+          📥 Descargar CSV
+        </Button>
+      </div>
       
       <div className="space-y-2 max-h-96 overflow-y-auto">
         {submissions.map((submission) => (
