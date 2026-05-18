@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { RehearsalSlot } from '@prisma/client';
 import { Input } from './ui/Input';
 import { Button } from './ui/Button';
-import { submitAvailability } from '@/lib/actions';
+import { submitAvailability, getSubmissionByName, updateAvailability } from '@/lib/actions';
 import { formatTime, calculateEndTime, formatDateInput } from '@/lib/utils';
 
 interface CalendarSubmissionFormProps {
@@ -42,6 +42,9 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
   const [exito, setExito] = useState(false);
+  const [modoEdicion, setModoEdicion] = useState(false);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [buscando, setBuscando] = useState(false);
 
   const diasAgrupados = useMemo(() => {
     const grupos = new Map<string, DiaAgrupado>();
@@ -96,21 +99,66 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
     setSlotsSeleccionados(nuevos);
   };
 
+  const buscarRespuesta = async () => {
+    if (!nombre.trim()) {
+      setError('Ingresa tu nombre para buscar tu respuesta');
+      return;
+    }
+
+    setBuscando(true);
+    setError('');
+
+    try {
+      const resultado = await getSubmissionByName(nombre);
+      
+      if (resultado.success && resultado.data) {
+        // Encontró una respuesta existente
+        setSubmissionId(resultado.data.id);
+        setModoEdicion(true);
+        // Cargar las selecciones existentes
+        const slotIds = resultado.data.selections.map(s => s.slotId);
+        setSlotsSeleccionados(new Set(slotIds));
+      } else {
+        setError('No se encontró una respuesta con ese nombre. Puedes crear una nueva.');
+        setModoEdicion(false);
+        setSubmissionId(null);
+        setSlotsSeleccionados(new Set());
+      }
+    } catch (err) {
+      setError('Error al buscar la respuesta');
+    } finally {
+      setBuscando(false);
+    }
+  };
+
   const enviar = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setCargando(true);
 
     try {
-      const resultado = await submitAvailability({
-        participantName: nombre,
-        slotIds: Array.from(slotsSeleccionados),
-      });
+      let resultado;
+      
+      if (modoEdicion && submissionId) {
+        // Actualizar respuesta existente
+        resultado = await updateAvailability({
+          submissionId,
+          slotIds: Array.from(slotsSeleccionados),
+        });
+      } else {
+        // Crear nueva respuesta
+        resultado = await submitAvailability({
+          participantName: nombre,
+          slotIds: Array.from(slotsSeleccionados),
+        });
+      }
 
       if (resultado.success) {
         setExito(true);
         setNombre('');
         setSlotsSeleccionados(new Set());
+        setModoEdicion(false);
+        setSubmissionId(null);
       } else {
         setError(resultado.error);
       }
@@ -130,8 +178,14 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Gracias!</h2>
-          <p className="text-gray-600">Tu disponibilidad ha sido registrada.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {modoEdicion ? '¡Actualizado!' : '¡Gracias!'}
+          </h2>
+          <p className="text-gray-600">
+            {modoEdicion 
+              ? 'Tu disponibilidad ha sido actualizada correctamente.' 
+              : 'Tu disponibilidad ha sido registrada.'}
+          </p>
         </div>
         <Button onClick={() => setExito(false)}>
           Enviar otra respuesta
@@ -151,16 +205,60 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
   return (
     <div className="max-w-7xl mx-auto">
       <form onSubmit={enviar} className="space-y-8">
-        <Input
-          type="text"
-          label="Tu Nombre"
-          placeholder="Ingresa tu nombre"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          required
-          autoFocus
-          maxLength={100}
-        />
+        <div className="space-y-2">
+          <Input
+            type="text"
+            label="Tu Nombre"
+            placeholder="Ingresa tu nombre"
+            value={nombre}
+            onChange={(e) => {
+              setNombre(e.target.value);
+              // Reset edit mode when name changes
+              if (modoEdicion) {
+                setModoEdicion(false);
+                setSubmissionId(null);
+                setSlotsSeleccionados(new Set());
+              }
+            }}
+            required
+            autoFocus
+            maxLength={100}
+          />
+          
+          {/* Botón para buscar/editar respuesta existente */}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={buscarRespuesta}
+              disabled={buscando || !nombre.trim()}
+              className="text-sm"
+            >
+              {buscando ? 'Buscando...' : modoEdicion ? '💾 Modo Edición' : '🔍 Buscar mi respuesta'}
+            </Button>
+            
+            {modoEdicion && (
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => {
+                  setModoEdicion(false);
+                  setSubmissionId(null);
+                  setSlotsSeleccionados(new Set());
+                }}
+                className="text-sm"
+              >
+                Cancelar edición
+              </Button>
+            )}
+          </div>
+          
+          {modoEdicion && (
+            <p className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
+              Estás editando tu respuesta existente. Modifica las selecciones y guarda los cambios.
+            </p>
+          )}
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-4">
@@ -253,7 +351,10 @@ export function CalendarSubmissionForm({ slots }: CalendarSubmissionFormProps) {
           disabled={cargando || !nombre.trim() || slotsSeleccionados.size === 0}
           className="w-full"
         >
-          {cargando ? 'Enviando...' : 'Enviar Disponibilidad'}
+          {cargando 
+            ? (modoEdicion ? 'Guardando...' : 'Enviando...') 
+            : (modoEdicion ? '💾 Guardar Cambios' : 'Enviar Disponibilidad')
+          }
         </Button>
       </form>
     </div>

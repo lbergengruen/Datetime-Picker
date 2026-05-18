@@ -272,6 +272,104 @@ export async function submitAvailability(data: {
   }
 }
 
+export async function getSubmissionByName(name: string): Promise<ActionResult<{ id: string; participantName: string; selections: Array<{ slotId: string }> } | null>> {
+  try {
+    // Check if database is available (for build-time)
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === 'postgresql://placeholder') {
+      return { success: true, data: null };
+    }
+    
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return { success: true, data: null };
+    }
+    
+    // Case-insensitive search for the name
+    const submissions = await prisma.availabilitySubmission.findMany({
+      where: {
+        participantName: {
+          equals: trimmedName,
+          mode: 'insensitive',
+        },
+      },
+      include: {
+        selections: {
+          select: { slotId: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 1,
+    });
+    
+    if (submissions.length === 0) {
+      return { success: true, data: null };
+    }
+    
+    const submission = submissions[0];
+    return { 
+      success: true, 
+      data: {
+        id: submission.id,
+        participantName: submission.participantName,
+        selections: submission.selections,
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching submission by name:', error);
+    return { success: false, error: 'Failed to fetch submission' };
+  }
+}
+
+export async function updateAvailability(data: {
+  submissionId: string;
+  slotIds: string[];
+}): Promise<ActionResult<AvailabilitySubmission>> {
+  try {
+    // Check if database is available (for build-time)
+    if (!process.env.DATABASE_URL || process.env.DATABASE_URL === 'postgresql://placeholder') {
+      return { success: false, error: 'Database not available' };
+    }
+    
+    if (!data.submissionId) {
+      return { success: false, error: 'Submission ID is required' };
+    }
+
+    if (!data.slotIds || data.slotIds.length === 0) {
+      return { success: false, error: 'Please select at least one rehearsal slot' };
+    }
+
+    // Delete existing selections
+    await prisma.availabilitySelection.deleteMany({
+      where: { submissionId: data.submissionId },
+    });
+
+    // Create new selections
+    await prisma.availabilitySelection.createMany({
+      data: data.slotIds.map((slotId) => ({
+        submissionId: data.submissionId,
+        slotId,
+      })),
+    });
+
+    // Fetch and return updated submission
+    const updatedSubmission = await prisma.availabilitySubmission.findUnique({
+      where: { id: data.submissionId },
+      include: { selections: true },
+    });
+
+    if (!updatedSubmission) {
+      return { success: false, error: 'Submission not found' };
+    }
+
+    revalidatePath('/analysis');
+
+    return { success: true, data: updatedSubmission };
+  } catch (error) {
+    console.error('Error updating availability:', error);
+    return { success: false, error: 'Failed to update availability' };
+  }
+}
+
 export async function getAnalysisData(): Promise<AnalysisData> {
   try {
     // Check if database is available (for build-time)
