@@ -4,19 +4,23 @@ import { useState } from 'react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { deleteSubmission } from '@/lib/actions';
+import type { AnalysisSlot } from '@/lib/types';
+import { formatDate, formatTime } from '@/lib/utils';
 
 interface Submission {
   id: string;
   participantName: string;
   createdAt: Date;
   selectionCount: number;
+  selections: Array<{ slotId: string }>;
 }
 
 interface SubmissionsManagerProps {
   submissions: Submission[];
+  slots: AnalysisSlot[];
 }
 
-export function SubmissionsManager({ submissions }: SubmissionsManagerProps) {
+export function SubmissionsManager({ submissions, slots }: SubmissionsManagerProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleDelete = async (id: string, name: string) => {
@@ -33,15 +37,30 @@ export function SubmissionsManager({ submissions }: SubmissionsManagerProps) {
   };
 
   const downloadCSV = () => {
-    // CSV Headers
-    const headers = ['Nombre', 'Horarios Seleccionados', 'Fecha de Respuesta'];
+    // Sort slots by date and time for consistent column order
+    const sortedSlots = [...slots].sort((a, b) => {
+      const dateA = new Date(a.slot.date).getTime();
+      const dateB = new Date(b.slot.date).getTime();
+      if (dateA !== dateB) return dateA - dateB;
+      return a.slot.startTime.localeCompare(b.slot.startTime);
+    });
+
+    // CSV Headers: Nombre + one column per slot
+    const slotHeaders = sortedSlots.map(slot => {
+      const date = formatDate(new Date(slot.slot.date));
+      const time = formatTime(slot.slot.startTime);
+      return `${date} ${time}`;
+    });
+    const headers = ['Nombre', ...slotHeaders];
     
-    // CSV Rows
-    const rows = submissions.map(sub => [
-      sub.participantName,
-      sub.selectionCount.toString(),
-      new Date(sub.createdAt).toLocaleString('es-ES')
-    ]);
+    // CSV Rows: One row per person, with X if they selected that slot
+    const rows = submissions.map(sub => {
+      const selectedSlotIds = new Set(sub.selections.map(s => s.slotId));
+      const slotValues = sortedSlots.map(slot => 
+        selectedSlotIds.has(slot.slot.id) ? 'X' : ''
+      );
+      return [sub.participantName, ...slotValues];
+    });
     
     // Combine headers and rows
     const csvContent = [
@@ -54,7 +73,7 @@ export function SubmissionsManager({ submissions }: SubmissionsManagerProps) {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `respuestas_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `disponibilidad_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

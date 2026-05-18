@@ -85,7 +85,7 @@ export default async function AnalysisPage() {
 
               {/* Right: Submissions Manager */}
               <div className="lg:col-span-1">
-                <SubmissionsManager submissions={submissions} />
+                <SubmissionsManager submissions={submissions} slots={slots} />
               </div>
             </div>
           </div>

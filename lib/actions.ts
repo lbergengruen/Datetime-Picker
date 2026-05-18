@@ -198,7 +198,7 @@ export async function deleteSubmission(id: string): Promise<ActionResult<void>> 
   }
 }
 
-export async function getSubmissionsList(): Promise<Array<{ id: string; participantName: string; createdAt: Date; selectionCount: number }>> {
+export async function getSubmissionsList(): Promise<Array<{ id: string; participantName: string; createdAt: Date; selectionCount: number; selections: Array<{ slotId: string }> }>> {
   try {
     // Check if database is available (for build-time)
     if (!process.env.DATABASE_URL || process.env.DATABASE_URL === 'postgresql://placeholder') {
@@ -207,6 +207,9 @@ export async function getSubmissionsList(): Promise<Array<{ id: string; particip
     
     const submissions = await prisma.availabilitySubmission.findMany({
       include: {
+        selections: {
+          select: { slotId: true },
+        },
         _count: {
           select: { selections: true },
         },
@@ -219,6 +222,7 @@ export async function getSubmissionsList(): Promise<Array<{ id: string; particip
       participantName: sub.participantName,
       createdAt: sub.createdAt,
       selectionCount: sub._count.selections,
+      selections: sub.selections,
     }));
   } catch (error) {
     console.error('Error fetching submissions:', error);
